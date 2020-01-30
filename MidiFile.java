@@ -305,9 +305,9 @@ public class MidiFile {
 
 		// Test 1 占쏙옙 play a C major chord
 
-//				mf.noteOn(0, 60, 127);
-//				mf.noteOff(MINIM, 60);
-
+//		mf.noteOn(0, 60, 127);
+//		mf.noteOff(MINIM, 60);
+		
 		//		mf.noteOnOffNow(CROTCHET, 60, 127);
 		//		mf.noteOnOffNow(CROTCHET, 62, 127);
 		//		mf.noteOnOffNow(CROTCHET, 64, 127);
@@ -328,13 +328,11 @@ public class MidiFile {
 		//		mf.progChange(10); // 악기변경
 		//
 		//		mf.noteSequenceFixedVelocity(sequence, 127);
-
-		
 		HashMap<Integer, Integer> scaleMap = new HashMap<Integer, Integer>();
-
+		int deleyLength = 0;
 		for (int x = 0; x < songArray.length; x++) {
 			scaleMap.clear(); // HashMap 초기화
-			
+
 			for (int y = 0; y < 7; y++) { // 배열에서 음의 종류와 개수 얻어와서 저장하기
 				if (songArray[x][y] != 0x00) {
 					if (scaleMap.containsKey(songArray[x][y])) { // 음이 이미 있다면 (발견한 음을 기억한 적이 있다면)
@@ -344,10 +342,16 @@ public class MidiFile {
 					}
 				}
 			}
-			
+
 			if (!scaleMap.isEmpty()) { // 이번 칸에 음이 있다면
 				for (int note : scaleMap.keySet()) { // 일단 음 전부 연주하기
-					mf.noteOn(0, note + 47, 127); 
+					if (deleyLength != 0) { // 음이 없는 칸이 있었다면
+						// 음이 없는 칸이 저장된 만큼 쉬었다가 연주하기 시작함
+						mf.noteOn((int) (SEMIQUAVER * Math.pow(2, (deleyLength - 1))), note + 47, 127);
+						deleyLength = 0;
+					} else { // 음이 없는 칸이 없었다면
+						mf.noteOn(0, note + 47, 127);
+					}
 				}
 
 				// 음의 개수 기준으로 오름차순 정렬하기
@@ -369,8 +373,9 @@ public class MidiFile {
 				}
 			} else { // 이번 칸에 음이 없다면
 				// 기본 박자만큼 아무것도 연주 안함
-				mf.noteOn(0, 0, 0);
-				mf.noteOff(SEMIQUAVER, 0);
+				// 음이 없는 칸의 개수를 한개 늘림
+				
+				deleyLength++;
 			}
 		}
 		
